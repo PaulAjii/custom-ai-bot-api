@@ -1,0 +1,38 @@
+{
+	"name": "chatbot-tutorial",
+	"version": "1.0.0",
+	"description": "",
+	"main": "src/app.js",
+	"type": "module",
+	"scripts": {
+		"build": "tsc",
+		"dev": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/app.ts\"",
+		"start": "node dist/app.js",
+		"seed": "node --loader ts-node/esm src/db/seed.ts"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.10.0",
+	"dependencies": {
+		"@langchain/community": "^0.3.42",
+		"@langchain/core": "^0.3.50",
+		"@langchain/langgraph": "^0.2.67",
+		"@langchain/mongodb": "^0.1.0",
+		"@langchain/openai": "^0.5.8",
+		"dotenv": "^16.5.0",
+		"express": "^5.1.0",
+		"http-status-codes": "^2.3.0",
+		"langchain": "^0.3.24",
+		"mammoth": "^1.9.0",
+		"mongodb": "^6.16.0",
+		"pdf-parse": "^1.1.1"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.1",
+		"@types/node": "^22.15.3",
+		"nodemon": "^3.1.10",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.8.3"
+	}
+}
