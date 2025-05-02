@@ -19,7 +19,6 @@ const files = [
 // Load the DOCX file and extract text from it
 const loader = files.map((file) => new DocxLoader(file));
 
-// const docs = loader.map(async (doc) => (await doc.load()));
 let docs = [];
 
 for (const doc of loader) {
