@@ -6,9 +6,12 @@
 	"type": "module",
 	"scripts": {
 		"build": "tsc",
-		"dev": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/app.ts\"",
+		"dev": "nodemon --watch src --ext ts --exec \"node --no-warnings --loader ts-node/esm src/app.ts\"",
 		"start": "node dist/app.js",
-		"seed": "node --loader ts-node/esm src/db/seed.ts"
+		"seed": "node --loader ts-node/esm src/db/seed.ts",
+		"seed:enhanced": "node --loader ts-node/esm src/utils/enhancedSeeding.ts",
+		"seed:clear": "node --loader ts-node/esm src/utils/enhancedSeeding.ts --clear",
+		"create-index": "node --loader ts-node/esm src/utils/createVectorIndex.js"
 	},
 	"keywords": [],
 	"author": "",
@@ -26,11 +29,13 @@
 		"langchain": "^0.3.24",
 		"mammoth": "^1.9.0",
 		"mongodb": "^6.16.0",
-		"pdf-parse": "^1.1.1"
+		"pdf-parse": "^1.1.1",
+		"uuid": "^9.0.1"
 	},
 	"devDependencies": {
 		"@types/express": "^5.0.1",
 		"@types/node": "^22.15.3",
+		"@types/uuid": "^9.0.7",
 		"nodemon": "^3.1.10",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.8.3"

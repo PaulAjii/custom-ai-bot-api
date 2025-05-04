@@ -2,20 +2,12 @@ import { MongoClient } from 'mongodb';
 import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
 import { embedding } from '../ai/index.js';
 import 'dotenv/config';
-
 const { MONGO_URI, MONGO_DB, MONGO_COLLECTION } = process.env;
-
 const client = new MongoClient(MONGO_URI);
-
 const collection = client.db(MONGO_DB).collection(MONGO_COLLECTION);
-
-// Configure the vector store with proper error handling
-// This allows the app to work even if Atlas Vector Search isn't available
 export const vectorStore = new MongoDBAtlasVectorSearch(embedding, {
-	collection: collection,
-	indexName: 'vector_index',
-	textKey: 'text',
-	embeddingKey: 'embedding',
-	// Add this to continue working on different MongoDB setups
-	overrideFilter: (query: string, _filter?: any) => ({})  // Always empty filter, rely on in-memory filtering
+    collection: collection,
+    indexName: 'vector_index',
+    textKey: 'text',
+    embeddingKey: 'embedding',
 });
