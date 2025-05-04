@@ -9,13 +9,11 @@ const client = new MongoClient(MONGO_URI);
 
 const collection = client.db(MONGO_DB).collection(MONGO_COLLECTION);
 
-// Configure the vector store with proper error handling
-// This allows the app to work even if Atlas Vector Search isn't available
+// Configure the vector store with basic settings
+// Remember that filtering is handled in-memory in the API, not at the database level
 export const vectorStore = new MongoDBAtlasVectorSearch(embedding, {
 	collection: collection,
 	indexName: 'vector_index',
 	textKey: 'text',
-	embeddingKey: 'embedding',
-	// Add this to continue working on different MongoDB setups
-	overrideFilter: (query: string, _filter?: any) => ({})  // Always empty filter, rely on in-memory filtering
+	embeddingKey: 'embedding'
 });

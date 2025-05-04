@@ -14,9 +14,9 @@ const app = express();
 const port = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
-// Request logging middleware
+// Request logging middleware - only log errors, not normal requests
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} | ${req.method} ${req.url}`);
+    // Remove console log for normal requests
     next();
 });
 // Base route
@@ -48,16 +48,13 @@ app.use((err, req, res, next) => {
 // Start server
 const server = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-    // Initialize analytics but don't await it
-    initAnalytics()
-        .then(success => console.log(`Analytics initialized: ${success ? 'success' : 'disabled'}`))
-        .catch(err => console.warn('Failed to initialize analytics:', err));
+    // Initialize analytics but don't await it and don't log the result
+    initAnalytics().catch(err => console.error('Analytics initialization error:', err));
 });
 // Handle graceful shutdown
 const gracefulShutdown = () => {
     console.log('Shutting down server...');
     server.close(() => {
-        console.log('Express server closed');
         process.exit(0);
     });
     // Force close after 10 seconds

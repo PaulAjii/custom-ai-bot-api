@@ -11,21 +11,18 @@ let analyticsCollection = null;
 export async function initAnalytics() {
     try {
         if (!MONGO_URI || !MONGO_DB) {
-            console.warn('MongoDB connection details missing. Analytics will be disabled.');
             return false;
         }
         // Initialize MongoDB client
         client = new MongoClient(MONGO_URI);
         // Test connection
         await client.connect();
-        console.log('Analytics: MongoDB connection successful');
         // Set up analytics collection
         analyticsCollection = client.db(MONGO_DB).collection('analytics');
         // Create indexes for better query performance
         await analyticsCollection.createIndex({ timestamp: 1 });
         await analyticsCollection.createIndex({ sessionId: 1 });
         await analyticsCollection.createIndex({ humanAssistanceNeeded: 1 });
-        console.log('Analytics system initialized');
         return true;
     }
     catch (error) {
@@ -42,7 +39,6 @@ export async function closeAnalyticsConnection() {
     if (client) {
         try {
             await client.close();
-            console.log('Analytics MongoDB connection closed');
         }
         catch (error) {
             console.error('Error closing analytics MongoDB connection:', error);

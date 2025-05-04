@@ -19,6 +19,18 @@ const StateAnnotation = Annotation.Root({
     needsHumanAssistance: (Annotation), // Whether to suggest human handoff
     finalAnswer: (Annotation), // Final processed answer
 });
+// Add error-safe wrapper for vector search to prevent MongoDB filtering errors
+async function safeSimilaritySearch(question, k = 8) {
+    try {
+        // First try without any filter
+        return await vectorStore.similaritySearch(question, k);
+    }
+    catch (error) {
+        // If error occurs, log it but don't crash
+        console.error('Vector search error (continuing with empty results):', error.message);
+        return []; // Return empty array as fallback
+    }
+}
 // Define the enhanced application steps
 // Step 1: Categorize the question
 const categorize = async (state) => {
@@ -27,11 +39,19 @@ const categorize = async (state) => {
 };
 // Step 2: Retrieve relevant documents
 const retrieve = async (state) => {
-    // Retrieve more documents than we need for better filtering
-    const retrievedDocs = await vectorStore.similaritySearch(state.question, 8, // Get more documents initially
-    state.category !== 'General' ? { category: state.category } : undefined);
+    // Retrieve documents without using category filter to avoid MongoDB index issues
+    const retrievedDocs = await safeSimilaritySearch(state.question, 12);
+    // Apply category filtering in memory instead of in the database query
+    let filteredDocs = retrievedDocs;
+    if (state.category !== 'General') {
+        filteredDocs = retrievedDocs.filter(doc => doc.metadata?.category === state.category);
+        // If filtering resulted in too few documents, fall back to all retrieved docs
+        if (filteredDocs.length < 3) {
+            filteredDocs = retrievedDocs;
+        }
+    }
     // Reorder documents by relevance to the question
-    const orderedDocs = reorderDocumentsByRelevance(retrievedDocs, state.question);
+    const orderedDocs = reorderDocumentsByRelevance(filteredDocs, state.question);
     // Take only the top most relevant documents
     const selectedDocs = orderedDocs.slice(0, 4);
     // Evaluate context relevance for later use

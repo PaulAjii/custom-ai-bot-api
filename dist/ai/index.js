@@ -4,7 +4,7 @@ export const llm = new ChatOpenAI({
     modelName: "gpt-4o",
     temperature: 0.7,
     maxTokens: 1024,
-    verbose: true,
+    verbose: false,
 });
 export const embedding = new OpenAIEmbeddings({
     model: 'text-embedding-3-large',

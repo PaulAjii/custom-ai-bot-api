@@ -38,6 +38,18 @@ const StateAnnotation = Annotation.Root({
 	finalAnswer: Annotation<string>,                           // Final processed answer
 });
 
+// Add error-safe wrapper for vector search to prevent MongoDB filtering errors
+async function safeSimilaritySearch(question: string, k: number = 8) {
+	try {
+		// First try without any filter
+		return await vectorStore.similaritySearch(question, k);
+	} catch (error) {
+		// If error occurs, log it but don't crash
+		console.error('Vector search error (continuing with empty results):', error.message);
+		return []; // Return empty array as fallback
+	}
+}
+
 // Define the enhanced application steps
 // Step 1: Categorize the question
 const categorize = async (state: typeof StateAnnotation.State) => {
@@ -48,10 +60,7 @@ const categorize = async (state: typeof StateAnnotation.State) => {
 // Step 2: Retrieve relevant documents
 const retrieve = async (state: typeof StateAnnotation.State) => {
 	// Retrieve documents without using category filter to avoid MongoDB index issues
-	const retrievedDocs = await vectorStore.similaritySearch(
-		state.question,
-		12  // Get more documents initially to compensate for not using category filter
-	);
+	const retrievedDocs = await safeSimilaritySearch(state.question, 12);
 	
 	// Apply category filtering in memory instead of in the database query
 	let filteredDocs = retrievedDocs;
