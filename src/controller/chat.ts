@@ -8,7 +8,7 @@ import { identifyQuestionCategory, evaluateContextRelevance } from '../utils/cat
 
 export const chatController = async (req: Request, res: Response) => {
 	try {
-		const { prompt, sessionId } = req.body;
+		const { prompt, sessionId, windowSize } = req.body;
 
 		// Validate input
 		if (!prompt) {
@@ -24,7 +24,12 @@ export const chatController = async (req: Request, res: Response) => {
 		// Get or create session for conversation history
 		const session = sessionManager.getOrCreateSession(sessionId);
 		
-		// Get conversation history
+		// Set conversation window size if provided
+		if (windowSize && typeof windowSize === 'number' && windowSize > 0) {
+			sessionManager.setConversationWindowSize(session.sessionId, windowSize);
+		}
+		
+		// Get conversation history with current window size
 		const history = sessionManager.getFormattedHistory(session.sessionId);
 		
 		// Invoke the enhanced conversational graph
@@ -75,13 +80,14 @@ export const chatController = async (req: Request, res: Response) => {
 			console.error('Analytics error:', err)
 		});
 
-		// Return the response with token usage stats
+		// Return the response with token usage stats and current window size
 		res.status(StatusCodes.OK).json({
 			status: 'Success',
 			message: result.finalAnswer || result.answer,
 			sessionId: session.sessionId,
 			metadata: {
 				sessionActive: true,
+				conversationWindowSize: sessionManager.getConversationWindowSize(session.sessionId),
 				needsHumanAssistance: result.needsHumanAssistance || false,
 				responseTime: responseTime,
 				category: result.category || 'General',

@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface ChatMessage {
   role: 'human' | 'assistant' | 'system';
   content: string;
+  timestamp?: Date;
 }
 
 /**
@@ -15,6 +16,7 @@ interface SessionStore {
   [sessionId: string]: {
     history: ChatMessage[];
     lastUpdated: Date;
+    conversationWindowSize?: number;
   };
 }
 
@@ -25,6 +27,7 @@ interface SessionStore {
 class SessionManager {
   private sessions: SessionStore = {};
   private readonly maxSessionAge: number = 1000 * 60 * 60 * 24; // 24 hours
+  private defaultWindowSize: number = 10; // Default window size
   
   /**
    * Gets a session by ID or creates a new one
@@ -37,7 +40,8 @@ class SessionManager {
     if (!this.sessions[id] || this.isSessionExpired(id)) {
       this.sessions[id] = {
         history: [],
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
+        conversationWindowSize: this.defaultWindowSize
       };
     } else {
       // Update the last activity time
@@ -55,6 +59,12 @@ class SessionManager {
    */
   public addMessage(sessionId: string, message: ChatMessage): void {
     const session = this.getOrCreateSession(sessionId);
+    
+    // Add timestamp if not provided
+    if (!message.timestamp) {
+      message.timestamp = new Date();
+    }
+    
     this.sessions[sessionId].history.push(message);
     this.sessions[sessionId].lastUpdated = new Date();
   }
@@ -85,14 +95,52 @@ class SessionManager {
   
   /**
    * Gets the formatted chat history for context window
-   * Limited to the last N messages to avoid token limits
+   * Limited to the configured window size (or default)
    */
-  public getFormattedHistory(sessionId: string, maxMessages: number = 10): ChatMessage[] {
+  public getFormattedHistory(sessionId: string, overrideWindowSize?: number): ChatMessage[] {
     const session = this.getOrCreateSession(sessionId);
     const history = session.history;
     
+    // Determine window size to use
+    const windowSize = overrideWindowSize || 
+                      this.sessions[sessionId].conversationWindowSize || 
+                      this.defaultWindowSize;
+    
     // Get the last N messages from history
-    return history.slice(-maxMessages);
+    return history.slice(-windowSize);
+  }
+  
+  /**
+   * Sets the conversation window size for a specific session
+   */
+  public setConversationWindowSize(sessionId: string, windowSize: number): void {
+    if (this.sessions[sessionId]) {
+      this.sessions[sessionId].conversationWindowSize = windowSize;
+    }
+  }
+  
+  /**
+   * Gets the conversation window size for a specific session
+   */
+  public getConversationWindowSize(sessionId: string): number {
+    return this.sessions[sessionId]?.conversationWindowSize || this.defaultWindowSize;
+  }
+  
+  /**
+   * Sets the default conversation window size for new sessions
+   */
+  public setDefaultWindowSize(size: number): void {
+    if (size > 0) {
+      this.defaultWindowSize = size;
+    }
+  }
+  
+  /**
+   * Gets the full chat history for a session (without window limitations)
+   */
+  public getFullHistory(sessionId: string): ChatMessage[] {
+    const session = this.getOrCreateSession(sessionId);
+    return [...session.history]; // Return a copy to avoid external mutation
   }
 }
 

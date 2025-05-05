@@ -2,6 +2,7 @@ import express from 'express';
 import { StatusCodes } from 'http-status-codes';
 import 'dotenv/config';
 import chatRouter from './routes/chat.js';
+import analyticsRouter from './routes/analytics.js';
 import { initAnalytics } from './utils/analytics.js';
 // Catch unhandled promise rejections globally
 process.on('unhandledRejection', (reason, promise) => {
@@ -29,6 +30,7 @@ app.get('/', (req, res) => {
 });
 // API routes
 app.use('/api/v1/chat', chatRouter);
+app.use('/api/v1/analytics', analyticsRouter);
 // 404 handler
 app.use((req, res) => {
     res.status(StatusCodes.NOT_FOUND).json({

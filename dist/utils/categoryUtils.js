@@ -32,6 +32,25 @@ const categoryKeywords = {
     ]
 };
 /**
+ * Common greetings and casual interactions that don't need human help
+ */
+const commonGreetings = [
+    'hello', 'hi', 'hey', 'greetings', 'good morning',
+    'good afternoon', 'good evening', 'howdy',
+    'how are you', 'how\'s it going', 'what\'s up',
+    'nice to meet you', 'pleasure to meet you',
+    'thanks', 'thank you', 'appreciate it'
+];
+/**
+ * Simple questions that don't require human assistance
+ */
+const simpleQuestionPatterns = [
+    'who are you', 'what can you do', 'what is your name',
+    'your purpose', 'how do you work', 'help me with',
+    'tell me about', 'explain', 'what are you',
+    'how can you help'
+];
+/**
  * Identifies the most relevant category based on a question
  */
 export function identifyQuestionCategory(question) {
@@ -140,9 +159,34 @@ function extractKeyTerms(question) {
     return words.filter(word => !stopWords.includes(word));
 }
 /**
+ * Checks if the input is a common greeting or casual interaction
+ * that doesn't require document-based knowledge or human assistance
+ */
+function isGreetingOrCasualInteraction(input) {
+    const normalizedInput = input.toLowerCase().trim();
+    // Check if input matches any common greeting patterns
+    const isGreeting = commonGreetings.some(greeting => normalizedInput === greeting ||
+        normalizedInput.startsWith(greeting + ' ') ||
+        normalizedInput.includes(greeting));
+    // Check if input is a simple question about the bot itself
+    const isSimpleQuestion = simpleQuestionPatterns.some(pattern => normalizedInput.includes(pattern));
+    // Also check if this is just a very short input (likely a greeting)
+    const isVeryShortInput = normalizedInput.split(' ').length <= 2 && normalizedInput.length < 15;
+    return isGreeting || isSimpleQuestion || isVeryShortInput;
+}
+/**
  * Detects if a question requires human assistance
  */
 export function needsHumanHelp(question, context, answer) {
+    // First check if this is just a greeting or casual interaction
+    // Greetings should never trigger human assistance
+    if (isGreetingOrCasualInteraction(question)) {
+        return false;
+    }
+    // Check if question is too short to warrant human assistance
+    if (question.split(' ').length < 3) {
+        return false;
+    }
     // Check for low context relevance
     const contextRelevance = evaluateContextRelevance(context, question);
     // Check for uncertainty in the answer
@@ -157,8 +201,9 @@ export function needsHumanHelp(question, context, answer) {
         "discount", "negotiate", "specific offer", "personal", "account"
     ];
     const isComplexRequest = complexRequestIndicators.some(indicator => question.toLowerCase().includes(indicator));
-    // Determine if human help is needed
-    return (contextRelevance < 0.3) || hasUncertainty || isComplexRequest;
+    // Only suggest human assistance for complex requests with uncertainty
+    // or very low context relevance, never for greetings or simple questions
+    return (contextRelevance < 0.3) && (hasUncertainty || isComplexRequest);
 }
 /**
  * Creates a brief summary of a question (for human handoff messages)

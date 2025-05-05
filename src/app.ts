@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import 'dotenv/config';
 
 import chatRouter from './routes/chat.js';
+import analyticsRouter from './routes/analytics.js';
 import { initAnalytics } from './utils/analytics.js';
 
 // Catch unhandled promise rejections globally
@@ -36,6 +37,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api/v1/chat', chatRouter);
+app.use('/api/v1/analytics', analyticsRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
